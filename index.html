@@ -1,1 +1,293 @@
-dwddw
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weer App</title>
+    <!-- Importeren van een mooi icoontje voor de zoekbalk -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <!-- FontAwesome voor iconen -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FontAwesome/6.5.1/all.min.js"></script>
+    
+    <style>
+        /* --- CSS STYLING --- */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background-image: linear-gradient(135deg, #4facfe 0%, #00f260 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        /* De container van de app */
+        .weather-container {
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            width: 380px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        /* De stad naam */
+        .city-name {
+            font-size: 24px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        /* Het weer-icoon */
+        .weather-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+
+        /* De temperatuur */
+        .temperature {
+            font-size: 48px;
+            font-weight: 600;
+            color: #333;
+            display: inline-block;
+        }
+        
+        .degree-symbol {
+            font-size: 24px;
+            position: relative;
+            top: 15px;
+            left: -2px;
+        }
+
+        /* Beschrijving van het weer */
+        .description {
+            font-size: 18px;
+            font-weight: 500;
+            color: #666;
+            margin-bottom: 20px;
+            text-transform: capitalize;
+        }
+
+        /* Extra details (vochtigheid, wind) */
+        .details {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .detail-item {
+            background-color: #f0f4f8;
+            padding: 10px;
+            border-radius: 10px;
+            width: 60%;
+        }
+
+        .detail-icon {
+            font-size: 20px;
+            color: #333;
+        }
+
+        .detail-value {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #555;
+        }
+
+        /* Input en Button */
+        .search-box {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        input[type="text"] {
+            padding: 12px 15px;
+            border-radius: 10px;
+            border: none;
+            outline: none;
+            width: 100%;
+            background-color: #f0f4f8;
+            font-size: 16px;
+        }
+
+        input[type="text"]::placeholder {
+            color: #aaa;
+        }
+
+        button {
+            padding: 12px 20px;
+            border-radius: 10px;
+            border: none;
+            background-color: #4facfe;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        button:hover {
+            background-color: #2cbac6;
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(79, 174, 254, 0.3);
+        }
+
+        /* Animatie voor de iconen */
+        .weather-icon {
+            animation: popIn 0.5s ease forwards;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0) translateY(-100px); opacity: 0; }
+            100% { transform: scale(1) translateY(0); opacity: 1; }
+        }
+
+        /* Fallback tekst als er geen stad gevonden is */
+        .error-message {
+            display: none;
+            color: #ff4b5c;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="weather-container">
+        <!-- De stad wordt hier ingevuld -->
+        <h1 class="city-name" id="city-name">Amsterdam</h1>
+        
+        <!-- Het weer-icoon -->
+        <div class="weather-icon" id="weather-icon">
+            <i class="fa-solid fa-cloud-rain"></i>
+        </div>
+
+        <!-- De temperatuur -->
+        <div class="temperature">
+            15<span class="degree-symbol">°C</span>
+        </div>
+
+        <!-- Beschrijving -->
+        <p class="description" id="weather-desc">Regenig</p>
+
+        <!-- Details (Vochtigheid, Wind) -->
+        <div class="details">
+            <div class="detail-item">
+                <i class="fa-solid fa-water detail-icon"></i>
+                <span class="detail-value">76%</span>
+            </div>
+            <div class="detail-item">
+                <i class="fa-solid fa-wind detail-icon"></i>
+                <span class="detail-value">12 km/u</span>
+            </div>
+        </div>
+
+        <!-- Zoekbalk -->
+        <form class="search-box" id="weather-form">
+            <input type="text" id="city-input" placeholder="Voer stad in (bijv. Amsterdam, Londen)" autocomplete="off">
+            <button type="submit">
+                <i class="fa-solid fa-magnifying-glass"></i>
+            </button>
+        </form>
+
+        <!-- Foutmelding -->
+        <p class="error-message" id="error-msg">Deze stad is niet gevonden.</p>
+    </div>
+
+    <script>
+        /* --- JAVASCRIPT LOGIC --- */
+        
+        // 1. Selecteer elementen uit de HTML
+        const cityInput = document.getElementById('city-input');
+        const cityNameEl = document.getElementById('city-name');
+        const weatherIconEl = document.getElementById('weather-icon');
+        const weatherDescEl = document.getElementById('weather-desc');
+        const errorMsgEl = document.getElementById('error-msg');
+
+        // 2. Simulatie van Weerdata (Omdat we geen API sleutel hebben)
+        function getMockWeather(cityName) {
+            cityName = cityName.toLowerCase();
+
+            if (cityName.includes('zon') || cityName.includes('amsterdam')) {
+                return {
+                    temp: 24,
+                    icon: 'fa-sun',
+                    desc: 'Zonnig'
+                };
+            } else if (cityName.includes('regen') || cityName.includes('rotterdam')) {
+                return {
+                    temp: 13,
+                    icon: 'fa-cloud-rain',
+                    desc: 'Regenig'
+                };
+            } else if (cityName.includes('wolken') || cityName.includes('londen'))) {
+                return {
+                    temp: 16,
+                    icon: 'fa-cloud',
+                    desc: 'Bedekt'
+                };
+            } else {
+                // Standaard als het niet past in de simpele logica hierboven
+                return {
+                    temp: 20,
+                    icon: 'fa-cloud',
+                    desc: 'Gemengd'
+                };
+            }
+        }
+
+        // 3. Formulier event listener (wanneer op Enter of Button wordt gedrukt)
+        document.getElementById('weather-form').addEventListener('submit', function(e) {
+            e.preventDefault(); // Voorkom dat het formulier de pagina verlaat
+            
+            const city = cityInput.value.trim();
+
+            if (city === '') return; // Doen niets als leeg is
+
+            // Reset UI
+            cityNameEl.innerText = city.charAt(0).toUpperCase() + city.slice(1);
+            
+            // Haal data op
+            const weatherData = getMockWeather(city);
+
+            // Update de weergave
+            updateDisplay(weatherData);
+        });
+
+        function updateDisplay(data) {
+            // Verwijder foutmelding als er een resultaat is
+            errorMsgEl.style.display = 'none';
+
+            // Update Temperatuur
+            const tempContainer = document.querySelector('.temperature');
+            tempContainer.innerHTML = `${data.temp}<span class="degree-symbol">°C</span>`;
+
+            // Update Icoon (kleur en type)
+            let iconColor = '#ffcc00'; // Standaard geel voor zon
+            if (data.desc.includes('regen')) {
+                iconColor = '#4facfe'; // Blauw voor regen
+            } else if (data.desc.includes('wolken') || data.desc.includes('bedekt')) {
+                iconColor = '#f0f4f8;'; // Wit voor wolken
+            }
+
+            weatherIconEl.innerHTML = `<i class="fa-solid ${data.icon}" style="color: ${iconColor}"></i>`;
+            
+            weatherDescEl.innerText = data.desc;
+        }
+    </script>
+</body>
+</html>
